@@ -5,8 +5,11 @@
 package it.polito.tdp.crimes;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.crimes.model.Distretto;
+import it.polito.tdp.crimes.model.DistrettoAdiacente;
 import it.polito.tdp.crimes.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -25,7 +28,7 @@ public class FXMLController {
     private URL location;
 
     @FXML // fx:id="boxAnno"
-    private ComboBox<?> boxAnno; // Value injected by FXMLLoader
+    private ComboBox<Integer> boxAnno; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxMese"
     private ComboBox<?> boxMese; // Value injected by FXMLLoader
@@ -47,7 +50,27 @@ public class FXMLController {
 
     @FXML
     void doCreaReteCittadina(ActionEvent event) {
-
+    	this.txtResult.clear();
+    	Integer anno= this.boxAnno.getValue();
+    	if (anno==null) {
+    		this.txtResult.setText("Selezionare un anno");
+    		return;
+    	}
+    	this.model.creaGrafo(anno);
+    	this.txtResult.appendText("GRAFO CREATO:\n");
+    	this.txtResult.appendText("# Vertici: "+model.getNumVertici() );
+    	this.txtResult.appendText("\n# Archi: "+model.getNumArchi()+"\n" );
+    	if (!model.isGrafoCreato()) {
+    		this.txtResult.setText("Errore, creare prima il grafo");
+    		return;
+    	}
+    	for (Distretto d : model.getVertici()) {
+    		this.txtResult.appendText("\nInformazioni per il distretto: "+d.getId()+"\n");
+    		List<DistrettoAdiacente> elenco = model.adiacenti(d);
+    		for (DistrettoAdiacente da : elenco) {
+    			this.txtResult.appendText("distanza dal distretto "+da.getDistretto().getId()+" è di "+da.getDistanza()+" Km\n");
+    		}
+    	}
     }
 
     @FXML
@@ -69,5 +92,6 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	this.boxAnno.getItems().addAll(model.getAllYears());
     }
 }

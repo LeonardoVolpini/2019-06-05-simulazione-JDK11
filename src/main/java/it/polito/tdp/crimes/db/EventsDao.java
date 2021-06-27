@@ -7,7 +7,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import it.polito.tdp.crimes.model.Distretto;
 import it.polito.tdp.crimes.model.Event;
 
 
@@ -55,6 +57,51 @@ public class EventsDao {
 			e.printStackTrace();
 			return null ;
 		}
+	}
+	
+	public List<Integer> allYears(){
+		String sql="SELECT DISTINCT YEAR(e.reported_date) AS anno "
+				+ "FROM events e "
+				+ "ORDER BY YEAR(e.reported_date)";
+		List<Integer> anni= new ArrayList<>();
+		try {
+			Connection conn = DBConnect.getConnection() ;
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			ResultSet res = st.executeQuery() ;
+			while(res.next()) {
+				anni.add(res.getInt("anno"));
+			}
+			conn.close();
+			return anni ;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null ;
+		}
+		
+	}
+
+	public void loadIdMap(Map<Integer, Distretto> idMap, int anno) {
+		String sql="SELECT e.district_id AS id, AVG(e.geo_lon) AS lon, AVG (e.geo_lat) AS lat "
+				+ "FROM events e "
+				+ "WHERE YEAR(e.reported_date)=? "
+				+ "GROUP BY e.district_id "
+				+ "ORDER BY e.district_id ";
+		try {
+			Connection conn = DBConnect.getConnection() ;
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			st.setInt(1, anno);
+			ResultSet res = st.executeQuery() ;
+			while(res.next()) {
+				if(!idMap.containsKey(res.getInt("id"))) {
+					Distretto d= new Distretto(res.getInt("id"),res.getDouble("lon"),res.getDouble("lat"));
+					idMap.put(d.getId(), d);
+				}
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 }
