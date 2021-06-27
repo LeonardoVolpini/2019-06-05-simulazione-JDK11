@@ -11,7 +11,6 @@ import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
-import com.javadocmd.simplelatlng.LatLng;
 import com.javadocmd.simplelatlng.LatLngTool;
 import com.javadocmd.simplelatlng.util.LengthUnit;
 
@@ -22,19 +21,17 @@ public class Model {
 	private SimpleWeightedGraph<Distretto, DefaultWeightedEdge> grafo;
 	private EventsDao dao;
 	private Map<Integer,Distretto> idMap;
-	//private List<Adiacenza> adiacenze; //puo essere superfluo
 	private boolean grafoCreato;
-	//private ConnectivityInspector<Vertice, DefaultWeightedEdge> ci; //se chiede roba connessa ad un vertice
 	
-	//private List<Vertice> percorsoBest; //nel caso di ricorsione per percorso max
-	//private Integer pesoMax; //peso del percorso
+	private Distretto stazionePolizia;
+	private Simulator sim;
 	
 	public Model() {
 		this.dao = new EventsDao();
 		this.idMap= new HashMap<>();
-		//this.adiacenze= new ArrayList<>();
 		this.grafoCreato=false;
-		//this.percorsoBest= new ArrayList<>(); //per ricorsione
+		this.stazionePolizia=null;
+		this.sim= new Simulator();
 	}
 	
 	public void creaGrafo(int anno) {
@@ -50,7 +47,6 @@ public class Model {
 			}
 		}
 		this.grafoCreato=true;
-		//this.ci= new ConnectivityInspector<>(grafo);
 	}
 	
 	public List<Integer> getAllYears(){
@@ -82,4 +78,36 @@ public class Model {
 		Collections.sort(ris);
 		return ris;
 	}
+
+	public List<Integer> getAllMonths(int anno) {
+		return dao.allMonths(anno);
+	}
+
+	public List<Integer> getAllDays(int anno) {
+		return dao.allDays(anno);
+	}
+	
+	private Distretto calcolaStazionePolizia() {
+		Distretto dis=null;
+		int min=Integer.MAX_VALUE;
+		for (Distretto d : grafo.vertexSet()) {
+			if(d.getNumCrimini()<min) {
+				min=d.getNumCrimini();
+				dis=d;
+			}
+		}
+		return dis;
+	}
+	
+	public void Simula(int n, int anno, int mese, int giorno) {
+		this.stazionePolizia=this.calcolaStazionePolizia();
+		this.sim.init(stazionePolizia, n, dao.getAllEventsByYearMonthDay(anno, mese, giorno), idMap);
+		this.sim.run();
+	}
+	
+	public int getNumCasiMalGestiti() {
+		return sim.getNumCasiMalGestiti();
+	}
+	
+	
 }

@@ -8,12 +8,14 @@ public class Distretto {
 	private double lon;
 	private double lan;
 	private LatLng centro;
-	public Distretto(Integer id, double lon, double lan) {
+	private int numCrimini;
+	public Distretto(Integer id, double lon, double lan, int numCrimini) {
 		super();
 		this.id = id;
 		this.lon = lon;
 		this.lan=lan;
 		centro= new LatLng(this.lan,this.lon);
+		this.numCrimini=numCrimini;
 	}
 	public Integer getId() {
 		return id;
@@ -40,6 +42,12 @@ public class Distretto {
 	}
 	public void setCentro(LatLng centro) {
 		this.centro = centro;
+	}
+	public int getNumCrimini() {
+		return numCrimini;
+	}
+	public void setNumCrimini(int numCrimini) {
+		this.numCrimini = numCrimini;
 	}
 	@Override
 	public int hashCode() {

@@ -31,10 +31,10 @@ public class FXMLController {
     private ComboBox<Integer> boxAnno; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxMese"
-    private ComboBox<?> boxMese; // Value injected by FXMLLoader
+    private ComboBox<Integer> boxMese; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxGiorno"
-    private ComboBox<?> boxGiorno; // Value injected by FXMLLoader
+    private ComboBox<Integer> boxGiorno; // Value injected by FXMLLoader
 
     @FXML // fx:id="btnCreaReteCittadina"
     private Button btnCreaReteCittadina; // Value injected by FXMLLoader
@@ -71,11 +71,54 @@ public class FXMLController {
     			this.txtResult.appendText("distanza dal distretto "+da.getDistretto().getId()+" è di "+da.getDistanza()+" Km\n");
     		}
     	}
+    	this.boxMese.getItems().clear();
+    	this.boxMese.getItems().addAll(model.getAllMonths(anno));
+    	this.boxGiorno.getItems().clear();
+    	this.boxGiorno.getItems().addAll(model.getAllDays(anno));
     }
 
     @FXML
     void doSimula(ActionEvent event) {
-
+    	this.txtResult.clear();
+    	Integer anno= this.boxAnno.getValue();
+    	if (anno==null) {
+    		this.txtResult.setText("Selezionare un anno");
+    		return;
+    	}
+    	if (!model.isGrafoCreato()) { 
+    		this.txtResult.setText("Prima crea il grafo!!!");
+    		return;
+    	}
+    	Integer mese= this.boxMese.getValue();
+    	if (mese==null) {
+    		this.txtResult.setText("Selezionare un mese");
+    		return;
+    	}
+    	Integer giorno= this.boxGiorno.getValue();
+    	if (giorno==null) {
+    		this.txtResult.setText("Selezionare un giorno");
+    		return;
+    	}
+    	String nString = this.txtN.getText();
+    	if (nString.isEmpty()) { //superfluo, basta il try e catch
+    		this.txtResult.setText("Inserire un numero minimo di agenti");
+    		return;
+    	}
+    	int n; 
+    	try {
+    		n=Integer.parseInt(nString);
+    	} catch(NumberFormatException e) {
+    		this.txtResult.setText("Inseire un valore numerico come numero minimo di agenti");
+    		return;
+    	}
+    	if (n<0 || n>10) { //eventuali altri controlli
+    		this.txtResult.setText("Inserire un numero compreso tra 0 e 10 come numero di agenti");
+    		return;
+    	}
+    	this.model.Simula(n, anno, mese, giorno);
+    	this.txtResult.appendText("Il numero di casi mal gestiti sono: \n");
+    	this.txtResult.appendText(""+model.getNumCasiMalGestiti());
+    	
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete

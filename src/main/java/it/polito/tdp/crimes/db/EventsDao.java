@@ -59,6 +59,43 @@ public class EventsDao {
 		}
 	}
 	
+	public List<Event> getAllEventsByYearMonthDay(int anno, int mese, int giorno){
+		String sql="SELECT * "
+				+ "FROM events e "
+				+ "WHERE YEAR(e.reported_date)=? AND MONTH(e.reported_date)=? AND DAY(e.reported_date)=? "
+				+ "ORDER BY e.reported_date";
+		List<Event> list = new ArrayList<>() ;
+		try {
+			Connection conn = DBConnect.getConnection() ;
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			st.setInt(1, anno);
+			st.setInt(2,mese);
+			st.setInt(3, giorno);
+			ResultSet res = st.executeQuery() ;
+			while(res.next()) {
+					list.add(new Event(res.getLong("incident_id"),
+							res.getInt("offense_code"),
+							res.getInt("offense_code_extension"), 
+							res.getString("offense_type_id"), 
+							res.getString("offense_category_id"),
+							res.getTimestamp("reported_date").toLocalDateTime(),
+							res.getString("incident_address"),
+							res.getDouble("geo_lon"),
+							res.getDouble("geo_lat"),
+							res.getInt("district_id"),
+							res.getInt("precinct_id"), 
+							res.getString("neighborhood_id"),
+							res.getInt("is_crime"),
+							res.getInt("is_traffic")));
+			}
+			conn.close();
+			return list ;
+		}catch (SQLException e) {
+			e.printStackTrace();
+			return null ;
+		}
+	}
+	
 	public List<Integer> allYears(){
 		String sql="SELECT DISTINCT YEAR(e.reported_date) AS anno "
 				+ "FROM events e "
@@ -79,9 +116,53 @@ public class EventsDao {
 		}
 		
 	}
+	
+	public List<Integer> allMonths(int anno){
+		String sql="SELECT DISTINCT MONTH(e.reported_date) AS mese "
+				+ "FROM events e "
+				+ "WHERE YEAR(e.reported_date)=? "
+				+ "ORDER BY MONTH(e.reported_date)";
+		List<Integer> mesi= new ArrayList<>();
+		try {
+			Connection conn = DBConnect.getConnection() ;
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			st.setInt(1, anno);
+			ResultSet res = st.executeQuery() ;
+			while(res.next()) {
+				mesi.add(res.getInt("mese"));
+			}
+			conn.close();
+			return mesi ;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null ;
+		}
+	}
+	
+	public List<Integer> allDays(int anno){
+		String sql="SELECT DISTINCT DAY(e.reported_date) AS day "
+				+ "FROM events e "
+				+ "WHERE YEAR(e.reported_date)=? "
+				+ "ORDER BY DAY(e.reported_date)";
+		List<Integer> giorni= new ArrayList<>();
+		try {
+			Connection conn = DBConnect.getConnection() ;
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			st.setInt(1, anno);
+			ResultSet res = st.executeQuery() ;
+			while(res.next()) {
+				giorni.add(res.getInt("day"));
+			}
+			conn.close();
+			return giorni ;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null ;
+		}
+	}
 
 	public void loadIdMap(Map<Integer, Distretto> idMap, int anno) {
-		String sql="SELECT e.district_id AS id, AVG(e.geo_lon) AS lon, AVG (e.geo_lat) AS lat "
+		String sql="SELECT e.district_id AS id, AVG(e.geo_lon) AS lon, AVG (e.geo_lat) AS lat, COUNT(*) AS numCrimini "
 				+ "FROM events e "
 				+ "WHERE YEAR(e.reported_date)=? "
 				+ "GROUP BY e.district_id "
@@ -93,7 +174,7 @@ public class EventsDao {
 			ResultSet res = st.executeQuery() ;
 			while(res.next()) {
 				if(!idMap.containsKey(res.getInt("id"))) {
-					Distretto d= new Distretto(res.getInt("id"),res.getDouble("lon"),res.getDouble("lat"));
+					Distretto d= new Distretto(res.getInt("id"),res.getDouble("lon"),res.getDouble("lat"),res.getInt("numCrimini"));
 					idMap.put(d.getId(), d);
 				}
 			}
